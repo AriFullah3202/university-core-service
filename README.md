@@ -1,13 +1,19 @@
 - ## [Create new migration file after changing](#create-new-migration-file-after-changing)
 - ## [Introduction to microservice , Api gateway and redis](#introduction-to-micoservice--api-gateway-and-redis)
-  - ## [Monolithic and Microservices](#monolithic-and-microservices)
-  - ## [Redis](#redis-1)
+  -  [Monolithic and Microservices](#monolithic-and-microservices)
+  -  [Redis](#redis-1)
 - ## [create a model for academicSemester , academicFaculty , AcademicDepartment , Faculty , Student](#create-a-model-for-academicsemester--academicfaculty--academicdepartment--faculty--student-1)
 - ## [improved functionality with catchAsync and validation for academic semester](#improved-functionality-with-catchasync-and-validation-for-academic-semester-1)
-  - ## [improve validation for academicSemester](#improve-validation-for-academicsemester-1)
+  -  [improve validation for academicSemester](#improve-validation-for-academicsemester-1)
 - ## [Retrieving AcademicSemester data with integration of pagination Techniques](#retrieving-academicsemester-data-with-integration-of-pagination-techniques-1)
-  - ## [Retriving AcademicSemester data](#retriving-academicsemester-data-1)
-  - ## [integration with pagination](#integration-with-pagination-1)
+  -  [Retriving AcademicSemester data](#retriving-academicsemester-data-1)
+  -  [integration with pagination](#integration-with-pagination-1)
+- ## [Filtering Options for AcademicSemester Data](#filtering-options-for-academicsemester-data-1)
+  -  [searchTerm data](#searchterm-data-1)
+  -  [filer data](#filer-data-1)
+- ## [Sorting to academicSemester data and establishing a shared Prisma instance for efficient management](#sorting-to-academicsemester-data-and-establishing-a-shared-prisma-instance-for-efficient-management-1)
+  - [sorting](#sorting)
+  - [shared prisma instance](#shared-prisma-instance)
 
 - [Create folder for academic Semester](#create-folder-for-academic-semester)
 
@@ -444,6 +450,243 @@ const getAllFromDb = async (): Promise<
 };
 ```
 ## integration with pagination
+* in academicSemester.controller.ts
+* **এখানে `filters` আমরা `pick` ফাংশনের মধ্যে দুইটা প্যরামিটার পাঠাচ্ছি যা একটা হচ্ছে কি আমরা `req.query` এর মধ্যে পাচ্ছি আর আরেকটা হচ্ছে ['searchTerm', 'code', 'year'] আমরা কাকে চাই । এখানে আমরা `searchTerm` , `code` , `year` এর ভ্যালু চাই ।**
+* `options` এর মধ্যে ঠিক তেমন যা আমরা কি কি পাচ্ছি আর আরেকটা প্যরামিটারে আমরা কি কি চাই ।
+* `serivce` এর মধ্যে `filter` , `options` আমরা পাঠাচ্ছি।
+
+* ## নিচে pick মেথড দেয়া হল ।
 
 
+```js
+console.log(req.query);
+  const filters = pick(req.query, ['searchTerm', 'code', 'year']);
+  const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+  console.log('filters: ', filters);
+  console.log('options: ', options);
+    const result = await AcademicSemesterService.getAllFromDb(filters , options);
+```
+* src
+  * shared
+    * pick.ts
+```js
+//['page','limit','sortBy','sortOrder']
+
+const pick = <T extends Record<string, unknown>, k extends keyof T>(
+  obj: T,
+  keys: k[]
+): Partial<T> => {
+  const finalObj: Partial<T> = {};
+
+  for (const key of keys) {
+    if (obj && Object.hasOwnProperty.call(obj, key)) {
+      finalObj[key] = obj[key];
+    }
+  }
+  return finalObj;
+};
+
+export default pick;
+
+```
+* in academicService.service.ts
+* **এখানে `controller` থেকে `service` দুই্টা প্যারামিটারে ডাটা আসছে ।**
+* **`prisma` এর মেথড findMany এর ভিতরে skip , take পাঠাচ্ছি ।**
+```js
+const getAllFromDb = async (
+  filters,
+  options
+): Promise<IGenericResponse<AcademicSemester[]>> => {
+  const { page, limit, skip } = paginationHelpers.calculatePagination(options);
+
+  const result = await prisma.academicSemester.findMany({
+    skip,
+    take: limit,
+  });
+```
+* `paginationHelper` এ কি আছে ?
+  * **calculatePagination এ `options` গুলোকে পাঠিয়ে দিচ্ছি ।**
+  * **`page` , `limit` , `skip` , `sortBy` , `sortOrder` রিটার্ন করবে ।**
+  * **এটার প্রধান কাজ `options` এর মধ্যে কোন কিছু না দিলে ও ডিফল্ট সেট করে দেয়া যায় ।**
+
+* src
+  * helper
+    * paginationHelper.ts
+
+```js
+const calculatePagination = (options: IOptions): IOptionsResult => {
+  const page = Number(options.page || 1);
+  const limit = Number(options.limit || 10);
+  const skip = (page - 1) * limit;
+
+  const sortBy = options.sortBy || 'createdAt';
+  const sortOrder = options.sortOrder || 'desc';
+
+  return {
+    page,
+    limit,
+    skip,
+    sortBy,
+    sortOrder,
+  };
+};
+
+export const paginationHelpers = {
+  calculatePagination,
+};
+```
+## Filtering Options for AcademicSemester Data
+* in academicSemester.service.ts
+* এখানে `searchTerm` টাতে যা লিখব তা `title` , `code` এর মধ্যে সার্চ করবে । 
+
+## searchTerm data
+
+```js
+const getAllFromDb = async (
+  filters: IacademicSemesterFilterRequest,
+  options: IPaginationOptions
+): Promise<IGenericResponse<AcademicSemester[]>> => {
+  console.log(filters);
+  const { searchTerm } = filters;
+
+  const { limit, skip } = paginationHelpers.calculatePagination(options);
+  const result = await prisma.academicSemester.findMany({
+    where: {
+      OR: [
+        {
+          title: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        {
+          code: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      ],
+    },
+    skip,
+    take: limit,
+  });
+```
+* এখানে বারবার নিচের কোড লিখতে হচ্ছে 
+```js
+  contains: searchTerm,
+   mode: 'insensitive',
+```
+* এটাকে আমরা shortcut করতে পারি ।
+
+```js
+  const andCondition = [];
+  if (searchTerm) {
+    andCondition.push({
+      OR: ['title', 'code', 'startMonth', 'endMonth'].map(field => ({
+        [field]: {
+          contains: searchTerm,
+          mode: 'insensitive',
+        },
+      })),
+    });
+  }
+  const whereCondition: Prisma.AcademicSemesterWhereInput =
+    andCondition.length > 0 ? { AND: andCondition } : {};
+  const result = await prisma.academicSemester.findMany({
+    where: whereCondition,
+    skip,
+    take: limit,
+  });
+```
+## filer data
+* যদি আমরা ডাটা ফিল্টার করি যেমন : `title`, `code` , `startMonth` , `endMonth` এর ডাটা সার্চ করতে চাই ।
+* [key] আমরা এখানে `thrid bracket` ওই প্রপারটির ভ্যলুকে একসেস করছি ।
+* in academicSemester.service.ts
+```js
+  if (Object.keys(filterData).length > 0) {
+    andCondition.push({
+      AND: Object.keys(filterData).map(key => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+```
+## Sorting to academicSemester data and establishing a shared Prisma instance for efficient management
+## sorting
+
+* in academicSemester.service.
+```js
+  const result = await prisma.academicSemester.findMany({
+    where: whereCondition,
+    skip,
+    take: limit,
+    orderBy: {
+      createdAt: `desc`,
+    },
+  });
+```
+* উপরে শুধু‌ ` createdAt: `desc`,` এটার উপর সর্ট করলাম
+* এটাকে যদি আমরা ডাইনামিক করি তাহলে ...
+```js
+  const result = await prisma.academicSemester.findMany({
+    where: whereCondition,
+    skip,
+    take: limit,
+    orderBy: {
+      [options.sortBy] : options.sortOrder;
+    },
+  });
+```
+* এবার এমন হতে পারে যে আমরা sort করতে পারি আবার না করতে পারি । যদি না করি তাহলে exception দিবে 
+এজন্য আমরা একটা ডিফল্ডএকটা দিয়ে দিব ।
+
+```js
+  const result = await prisma.academicSemester.findMany({
+    where: whereCondition,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? {
+            [options.sortBy]: options.sortOrder,
+          }
+        : { createdAt: 'asc' },
+  });
+```
+## shared prisma instance
+* আমরা `service` এর মধ্যে `prisma` instance তৈরি করছি ।
+* এখন আমরা যদি আরো serivice তৈরি করি তাহলে প্রত্যেকবার আলাদা আলাদা instance তৈরি করতে হবে ।
+* এজন্য আমরা এক জায়গায় `prisma` instance তৈরি করবো সব জায়গায় `import` করবো ।
+
+* src
+  * shared
+    * prisma.ts
+
+```js
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient({
+  errorFormat: 'minimal',
+});
+export default prisma;
+```
+* এখন `service` এ ইমপোর্ট করতে হবে ।
+## fetching unique AcademicSemister information
+
+* আমরা এখানে `unique` ভাবে `result` find করবো 
+* এখানে `service` দেখাচ্ছি বাকি গুলো সেইম ।
+
+* in academicSemester.controller.ts
+```js
+const getDataById = async (id: string): Promise<AcademicSemester | null> => {
+  const result = await prisma.academicSemester.findUnique({
+    where: {
+      id,
+    },
+  });
+  return result;
+};
+```
 

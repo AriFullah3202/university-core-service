@@ -29,6 +29,41 @@
             "date": 1693112579869,
             "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-27-08-11-error.log",
             "hash": "133b3e1df70f83fdb3f108641f2b7037408b760aabb4edd8b711750a5cc2182b"
+        },
+        {
+            "date": 1693117601072,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-27-08-12-error.log",
+            "hash": "6ce0a0a24d5a6051a423b11946588a727ebe25d39cac744d6a618658bcfca240"
+        },
+        {
+            "date": 1693119886112,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-27-08-13-error.log",
+            "hash": "8fcdd300f32b949ac7ae58d09772fbe8cc63f03019863d21c6d7f9df010a2b74"
+        },
+        {
+            "date": 1693134072187,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-27-08-17-error.log",
+            "hash": "6a2e4cf073597c3707cf6064f6a2d6723c1256be7ee36e6f9e70d59bcccc7925"
+        },
+        {
+            "date": 1693308225311,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-29-08-17-error.log",
+            "hash": "dd51c45b6ceaa9b5eb2e3f86521227b8ef21a94dbc723ad65457e74ad0037eb1"
+        },
+        {
+            "date": 1693315726663,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-29-08-19-error.log",
+            "hash": "ed86192413f73b333f0cfc9ee49bacc67186d197e43a6dbc2a16870d38d7ad3a"
+        },
+        {
+            "date": 1693319239334,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-29-08-20-error.log",
+            "hash": "78d61c70a52f8e36e022121648b220e5ff486e63cc576bfb24e61dbcce472de2"
+        },
+        {
+            "date": 1693330969637,
+            "name": "H:\\Project\\JavaScript\\university-management-core-service-starter\\logs\\winston\\errors\\phu-2023-29-08-23-error.log",
+            "hash": "f35e9c647c8c11ae0a8d7f390912675e07215031c6287aa7c762db748d3687e1"
         }
     ],
     "hashType": "sha256"
